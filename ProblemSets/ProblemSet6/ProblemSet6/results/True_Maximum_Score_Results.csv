@@ -1,0 +1,7 @@
+Covariate,Beta,Std_Error,Z_Score
+Tier_Diff,-1.10167,1.008787,-1.092
+Rank_Diff,0.000792,0.017279,0.046
+Same_Country,1.361771,0.347366,3.92
+Same_Org,0.805173,1.004254,0.802
+Accuracy,0.42623,,
+Pseudo_R2,-0.147541,,
