@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, booktabs}
+\usepackage[margin=1in]{geometry}
+
+\begin{document}
+
+\section{Parameter Estimates}
+\input{parameter_estimates.tex}
+
+\section{Moment Comparison}
+\input{moments_comparison.tex}
+
+
+\subsection*{Explanation of Parameter Estimates}
+The table above shows the parameter estimates from the two-step SMM procedure. 
+Both the identity and weighted estimates end up 
+the same. This happens because the second-step weighting matrix does not change 
+the shape of the objective function very much.
+
+The estimates for $\alpha$, $\gamma$, $\rho$, and $\sigma$ are all positive and 
+relatively small. Their t-statistics are quite large, meaning the model is very 
+sensitive to small changes in these parameters around the optimum. The estimate 
+for $\phi_0$ is exactly zero, which means the model does not need extra financial 
+frictions to match the data under this specification.
+
+\subsection*{Explanation of Moment Comparison}
+The moment comparison table shows that the simulated moments are all equal to 
+zero. This happens because, under the estimated parameters, the model simulation 
+produces almost no variation in investment, profits, or $Q$. In other words, the 
+policy functions lead to almost flat behavior, so the simulated panel of firms 
+does not move much.
+
+Since the simulated series are basically constant, their standard deviations and 
+autocorrelations become zero by construction. Because of this, the model cannot 
+match the empirical targets, and the differences are simply the negative of the 
+targets. This suggests that the model might be too restrictive, or the SMM 
+estimates push the model toward a corner solution with very little dynamic 
+behavior.
+
+\section*{Model Description}
+
+The model follows the setup in Cooper and Ejarque (2003). Each firm chooses next
+period's capital $K'$ to maximize the expected discounted value of future profits.
+Output is produced using a Cobb--Douglas function with a productivity shock.
+Productivity follows an AR(1) process in logs, which we approximate on a 
+discrete grid using Tauchen's method.
+
+Firms face convex adjustment costs when changing capital. These costs depend on
+the size of investment relative to the capital stock. The parameter $\phi_0$
+controls an external finance cost, but in our estimates it ends up being zero.
+Given the model parameters, we solve the firm's dynamic programming problem by
+value function iteration and obtain decision rules for capital.
+
+Using these policy rules, we simulate a panel of firms and compute model moments
+that correspond to the moments reported in Table 3 of Cooper and Ejarque.
+We then estimate the parameters $(\alpha, \gamma, \rho, \sigma, \phi_0)$ using a 
+two--step SMM procedure. The first step uses the identity weighting matrix, and 
+the second step uses an estimated optimal weighting matrix based on the 
+variance of the simulated moments.
+
+
+\end{document}
