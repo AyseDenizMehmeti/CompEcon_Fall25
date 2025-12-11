@@ -1,0 +1,204 @@
+\documentclass[12pt]{article}
+
+% ------------------------
+% PACKAGES
+% ------------------------
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+
+% Page setup
+\geometry{margin=1in}
+\onehalfspacing
+
+% ------------------------
+% BEGIN DOCUMENT
+% ------------------------
+\begin{document}
+
+\title{Final Project: Old Navy Pricing Strategy Analysis}
+\author{Ayse Deniz}
+\date{} 
+
+\maketitle\section{Descriptive Analysis}
+
+The data comes from Old Navy's online store. Products were checked every ten minutes, giving over twenty million observations. I simplified this to daily data for each product. Each product has a unique ID based on gender, size, style, and color. For each product-day, I keep the price, discount, and inventory.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/discount_distribution_zoom.png}
+    \caption{Distribution of Positive Discounts (Excluding Near-Zero Values)}
+    \label{fig:discount_zoom}
+\end{figure}
+
+Figure~\ref{fig:discount_zoom} shows discounts across all product-days. Most discounts are either 10-20\% (sales) or 40-50\% (clearance).
+
+\medskip
+\noindent \textbf{Differences Between Men's and Women's Products.}
+Figure~\ref{fig:gender_promo} shows that Men's items go on clearance more often than Women's items. Women's products usually stay at regular price.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/gender_promo.png}
+    \caption{Promotion Type Frequency by Gender}
+    \label{fig:gender_promo}
+\end{figure}
+
+\medskip
+\noindent \textbf{Which Colors Go on Clearance Most.}
+Figure~\ref{fig:clearance_cat} shows that common colors like Blue, Black, and White go on clearance most often. Uncommon colors like Purple or Gold rarely go on clearance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/clearance_by_category.png}
+    \caption{Clearance Frequency by Category}
+    \label{fig:clearance_cat}
+\end{figure}
+
+\medskip
+\noindent \textbf{One Product's Price and Inventory Over Time.}
+Figure~\ref{fig:price_inventory} shows how one product's price and inventory changed. The price drops in steps while inventory goes down.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{figures/price_inventory_path_example.png}
+    \caption{Price and Inventory for One Product}
+    \label{fig:price_inventory}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/median_product_lifecycle.png}
+    \caption{Average Price and Inventory Across All Products}
+    \label{fig:median_lifecycle}
+\end{figure}
+
+Figure~\ref{fig:median_lifecycle} shows the average pattern for all products. As products get older, inventory goes down and prices drop slowly. This shows why Old Navy might change prices based on inventory.
+
+\section{Theory}
+
+Old Navy sets prices each day. They choose between three options: regular price, sale, or clearance. They don't know exactly how much they will sell, and they have limited inventory. So they must think about both current inventory and expected future sales.
+
+\subsection{State Variables}
+
+The important information each day is:
+\[
+S_t = (I_t,\ \widehat{D}_t),
+\]
+where $I_t$ is today's inventory and $\widehat{D}_t$ is expected demand (predicted by machine learning).
+
+\subsection{Control Variable}
+
+Each day Old Navy chooses:
+\[
+a_t \in \{\text{regular},\ \text{sale},\ \text{clearance}\}.
+\]
+
+\subsection{How Sales and Inventory Change}
+
+Let $Q_t$ be units sold today. Sales depend on the state and promotion choice:
+\[
+Q_t = D(S_t, a_t) + \varepsilon_t,
+\]
+where $\varepsilon_t$ is random noise. Tomorrow's inventory is:
+\[
+I_{t+1} = I_t - Q_t, \qquad I_{t+1} \ge 0.
+\]
+
+\subsection{The Firm's Problem}
+
+Let $\Pi(a_t)$ be profit from choosing $a_t$. Old Navy wants to maximize total profit over time:
+\[
+V(I_t,\widehat{D}_t)
+=
+\max_{a_t}
+\left\{
+  \Pi(a_t)
+  +
+  \beta\,\mathbb{E}\big[
+      V(I_{t+1},\widehat{D}_{t+1})
+  \mid S_t, a_t
+  \big]
+\right\}.
+\]
+The best choice each day is:
+\[
+a_t^\star = \pi(I_t,\widehat{D}_t).
+\]
+
+\section{Empirical Model: Estimating Expected Demand}
+
+We don't see actual sales, so I create a "demand proxy" using:
+\begin{itemize}
+    \item Product age
+    \item Recent promotions
+    \item Promotion type today
+    \item Product category
+\end{itemize}
+
+I use a random forest to predict this proxy. The predictions ($\widehat{D}_t$) become our measure of expected demand in the state variable.
+
+\section{Policy Function Estimation}
+
+I predict tomorrow's promotion choice using:
+\begin{itemize}
+    \item Inventory today
+    \item Expected demand ($\widehat{D}_t$)
+    \item Product age
+    \item Recent promotion frequency
+    \item Product category and gender
+\end{itemize}
+
+I use a random forest classifier. The model gets 96.7\% accuracy. However, 84\% of days are clearance events. A simple model that always predicts "clearance" would get 83.9\% accuracy. Our model is 12.8\% better than this baseline.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{Figures/confusion_matrix.png}
+    \caption{Confusion Matrix: Actual vs Predicted Promotions}
+    \label{fig:confusion}
+\end{figure}
+
+Figure~\ref{fig:confusion} shows where the model makes mistakes. It predicts clearance very well but sometimes confuses sales with clearance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{figures/policy_feature_importance.png}
+    \caption{Top 5 Most Important Predictors}
+    \label{fig:policy_importance}
+\end{figure}
+
+Figure~\ref{fig:policy_importance} shows the most important factors:
+\begin{enumerate}
+    \item Expected demand
+    \item Recent promotion frequency
+    \item Product age
+    \item Inventory level
+    \item Women's category (vs. Men's)
+\end{enumerate}
+
+\section{Conclusion}
+
+Old Navy's pricing follows clear patterns. Their decisions depend most on expected demand and recent promotions. Inventory matters, but less than demand expectations. The high accuracy (96.7\%) shows their pricing is very predictable.
+
+\vspace{5pt}
+\newpage
+
+\noindent\textbf{\large Limitations}
+\vspace{5pt}
+
+\begin{itemize}
+    \item We don't see actual sales, only a constructed "demand proxy"
+    \item Most days are clearance events (84\%), making it hard to predict sales perfectly
+    \item The model is descriptive—it shows what Old Navy does, not necessarily what they should do
+\end{itemize}
+
+Overall, Old Navy uses systematic rules that balance clearing inventory with making revenue.
+
+% ------------------------
+% END DOCUMENT
+% ------------------------
+\end{document}
